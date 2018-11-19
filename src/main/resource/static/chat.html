@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>聊天</title>
+    <script type="text/javascript" src="webjars/jquery/2.1.4/jquery.min.js"></script>
+    <script type="application/javascript">
+        var url=null;
+        var sock=null;
+        var userName=getQueryString("userName")
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return unescape(r[2]); return null;
+        }
+        $(function(){
+            if(!window.WebSocket){
+                alert('你的浏览器不支持WebSocket');
+            }else{
+                url='ws://localhost:8080/chatroom/'+userName
+                sock=new WebSocket(url)
+                sock.onopen=function () {
+                    $("#allMsg").append("<p>欢迎"+userName+"来到聊天室</p>");
+                }
+                sock.onmessage=function (e) {
+                    $("#allMsg").append("<p>"+e.data+"</p>")
+                }
+                sock.onclose=function () {
+                    window.close();
+                }
+            }
+        });
+        function sendMessage() {
+            var date=new Date()
+            sock.send(userName+" "+date.toLocaleTimeString()+" 说<br/>"+$('.msg').val())
+            $('.msg').val("")
+        }
+        function sendPrivateMessage() {
+            var date=new Date()
+            sock.send("<font color='red'>"+userName+date.toLocaleTimeString()+"对"+$('.privatechat').val()+"悄悄说<br/>"+$('.msg').val()+"</font>")
+            $('.msg').val("")
+        }
+    </script>
+</head>
+<body>
+
+<div id="allMsg"></div>
+<input type="text" class="msg"/><br/>
+<input type="button" value="发送消息" onclick="sendMessage()"/><br/>
+<input type="button" value="关闭websocket" onclick="sock.close()"/>
+对他私聊：<input type="text" class="privatechat"/><br/>
+<input type="button" value="发送私聊" onclick="sendPrivateMessage()"/><br/>
+</body>
+</html>
